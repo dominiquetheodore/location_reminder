@@ -21,6 +21,8 @@ class SaveReminderViewModel(val app: Application, val dataSource: ReminderDataSo
     val latitude = MutableLiveData<Double>()
     val longitude = MutableLiveData<Double>()
 
+    private val _geofenceIndex = -1
+
     /**
      * Clear the live data objects to start fresh next time the view model gets called
      */
@@ -79,4 +81,9 @@ class SaveReminderViewModel(val app: Application, val dataSource: ReminderDataSo
         }
         return true
     }
+
+    fun geofenceActivated() {
+        // _geofenceIndex = 1
+    }
+
 }

@@ -9,3 +9,7 @@ class RemindersListAdapter(callBack: (selectedReminder: ReminderDataItem) -> Uni
     BaseRecyclerViewAdapter<ReminderDataItem>(callBack) {
     override fun getLayoutRes(viewType: Int) = R.layout.it_reminder
 }
+
+class ReminderListener(val clickListener: (id: String) -> Unit) {
+    fun onClick(reminder: ReminderDataItem) = clickListener(reminder.id)
+}

@@ -6,6 +6,8 @@
     <data>
         <!--Data item that holds the reminder details-->
         <variable
+            name="clickListener" type="com.udacity.project4.locationreminders.reminderslist.ReminderListener"/>
+        <variable
             name="reminderDataItem"
             type="com.udacity.project4.locationreminders.reminderslist.ReminderDataItem" />
     </data>
@@ -15,6 +17,7 @@
         android:layout_height="match_parent"
         android:gravity="center"
         android:orientation="vertical"
+        android:onClick="@{() -> clickListener.onClick(reminderDataItem)}"
         tools:context=".locationreminders.ReminderDescriptionActivity">
         <!--TODO: add the design of the reminder details-->
 
@@ -24,6 +27,7 @@
             android:gravity="center"
             android:text="Reminder Details"
             android:textSize="@dimen/text_size_large"
+
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
