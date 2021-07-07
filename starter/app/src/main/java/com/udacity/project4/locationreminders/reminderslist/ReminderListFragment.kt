@@ -1,10 +1,13 @@
 package com.udacity.project4.locationreminders.reminderslist
 
+import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.view.*
 import androidx.databinding.DataBindingUtil
 import com.firebase.ui.auth.AuthUI
 import com.udacity.project4.R
+import com.udacity.project4.authentication.AuthenticationActivity
 import com.udacity.project4.base.BaseFragment
 import com.udacity.project4.base.NavigationCommand
 import com.udacity.project4.databinding.FragmentRemindersBinding
@@ -73,7 +76,13 @@ class ReminderListFragment : BaseFragment() {
         when (item.itemId) {
             R.id.logout_btn -> {
 //                TODO: add the logout implementation
+                Log.i("geo", "clicked on the logout button")
                 AuthUI.getInstance().signOut(requireContext())
+                        .addOnSuccessListener {
+                            val logOutIntent = Intent(activity, AuthenticationActivity::class.java)
+                            startActivity(logOutIntent)
+                            activity?.finish()
+                        }
             }
         }
         return super.onOptionsItemSelected(item)

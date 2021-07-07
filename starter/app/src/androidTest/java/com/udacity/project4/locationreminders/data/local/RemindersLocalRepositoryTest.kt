@@ -24,7 +24,61 @@ import org.junit.runner.RunWith
 //Medium Test to test the repository
 @MediumTest
 class RemindersLocalRepositoryTest {
+    private lateinit var localDataBase: RemindersDatabase
 
+    // Class under test
+    private lateinit var remindersLocalRepository: RemindersLocalRepository
+
+    private fun getReminder(): ReminderDTO {
+        return ReminderDTO(
+            title = "title",
+            description = "description",
+            location = "location",
+            latitude = 8.9806,
+            longitude = 38.7578)
+    }
+
+    // Executes each task synchronously using Architecture Components.
+    // This rule ensures that the test results happen synchronously and in a repeatable order.
+    @get:Rule
+    var instantExecutorRule = InstantTaskExecutorRule()
 //    TODO: Add testing implementation to the RemindersLocalRepository.kt
+    @Before
+    fun setup() {
+        // Using an in-memory database so that the information stored here disappears when the
+        // process is killed.
+        localDataBase = Room.inMemoryDatabaseBuilder(
+            ApplicationProvider.getApplicationContext(),
+            RemindersDatabase::class.java
+        ).allowMainThreadQueries().build()
+
+        remindersLocalRepository = RemindersLocalRepository(localDataBase.reminderDao(), Dispatchers.Main)
+    }
+
+        @After
+        fun cleanUp() {
+            localDataBase.close()
+        }
+
+    @Test
+    fun saveReminder_retrievesReminder() = runBlocking {
+        // GIVEN - A new reminder saved in the database.
+        val reminder = getReminder()
+        remindersLocalRepository.saveReminder(reminder)
+
+        // WHEN - Reminder retrieved by ID.
+        val result = remindersLocalRepository.getReminder(reminder.id)
+
+        // THEN - The same reminder is returned.
+        assertThat(result is Result.Success, `is`(true))
+        result as Result.Success
+
+
+        assertThat(result.data.title, `is`(reminder.title))
+        assertThat(result.data.description, `is`(reminder.description))
+        assertThat(result.data.latitude, `is`(reminder.latitude))
+        assertThat(result.data.longitude, `is`(reminder.longitude))
+        assertThat(result.data.location, `is`(reminder.location))
+    }
 
 }

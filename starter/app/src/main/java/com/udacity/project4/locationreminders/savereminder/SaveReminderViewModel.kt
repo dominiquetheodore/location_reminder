@@ -1,6 +1,7 @@
 package com.udacity.project4.locationreminders.savereminder
 
 import android.app.Application
+import android.util.Log
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import com.google.android.gms.maps.model.PointOfInterest
@@ -38,32 +39,35 @@ class SaveReminderViewModel(val app: Application, val dataSource: ReminderDataSo
     /**
      * Validate the entered data then saves the reminder data to the DataSource
      */
-    fun validateAndSaveReminder(reminderData: ReminderDataItem) {
+    fun validateAndSaveReminder(reminderData: ReminderDataItem): ReminderDTO? {
         if (validateEnteredData(reminderData)) {
-            saveReminder(reminderData)
+            return saveReminder(reminderData)
         }
+
+        return null
     }
 
     /**
      * Save the reminder to the data source
      */
-    fun saveReminder(reminderData: ReminderDataItem) {
+    fun saveReminder(reminderData: ReminderDataItem): ReminderDTO {
+        val reminderDTO = ReminderDTO(
+                reminderData.title,
+                reminderData.description,
+                reminderData.location,
+                reminderData.latitude,
+                reminderData.longitude,
+                reminderData.id)
+
         showLoading.value = true
         viewModelScope.launch {
-            dataSource.saveReminder(
-                ReminderDTO(
-                    reminderData.title,
-                    reminderData.description,
-                    reminderData.location,
-                    reminderData.latitude,
-                    reminderData.longitude,
-                    reminderData.id
-                )
-            )
+            dataSource.saveReminder(reminderDTO)
             showLoading.value = false
             showToast.value = app.getString(R.string.reminder_saved)
             navigationCommand.value = NavigationCommand.Back
         }
+
+        return reminderDTO
     }
 
     /**
@@ -81,9 +85,4 @@ class SaveReminderViewModel(val app: Application, val dataSource: ReminderDataSo
         }
         return true
     }
-
-    fun geofenceActivated() {
-        // _geofenceIndex = 1
-    }
-
 }

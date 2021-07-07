@@ -3,21 +3,19 @@ package com.udacity.project4.locationreminders.savereminder
 import android.annotation.SuppressLint
 import android.app.PendingIntent
 import android.content.Intent
-import android.content.IntentSender
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Toast
 import androidx.databinding.DataBindingUtil
-import com.google.android.gms.common.api.ResolvableApiException
 import com.google.android.gms.location.*
-import com.google.android.material.snackbar.Snackbar
+import com.google.android.gms.location.GeofencingRequest.INITIAL_TRIGGER_ENTER
 import com.udacity.project4.R
 import com.udacity.project4.base.BaseFragment
 import com.udacity.project4.base.NavigationCommand
 import com.udacity.project4.databinding.FragmentSaveReminderBinding
+import com.udacity.project4.locationreminders.data.dto.ReminderDTO
 import com.udacity.project4.locationreminders.geofence.GeofenceBroadcastReceiver
 import com.udacity.project4.locationreminders.reminderslist.ReminderDataItem
 import com.udacity.project4.utils.setDisplayHomeAsUpEnabled
@@ -55,9 +53,7 @@ class SaveReminderFragment : BaseFragment() {
             val latitude = _viewModel.latitude.value
             val longitude = _viewModel.longitude.value
 
-            val reminder = ReminderDataItem(title, description, location, latitude, longitude)
 
-            Log.i("geoFence", "saving reminder")
             val reminderDTO = _viewModel.validateAndSaveReminder(
                     ReminderDataItem(
                             title,
@@ -68,10 +64,8 @@ class SaveReminderFragment : BaseFragment() {
                     )
             )
             if (reminderDTO != null) {
-                addGeofenceForReminder(reminder)
-            }
-            else {
-                Log.i("geoFence", "error saving reminder")
+                Log.i("geoFence", "adding geofence for " + reminderDTO.id)
+                addGeofenceForReminder(reminderDTO)
             }
 //            TODO: use the user entered reminder details to:
 //             1) add a geofencing request
@@ -93,12 +87,13 @@ class SaveReminderFragment : BaseFragment() {
 
     private fun buildGeofencingRequest(geofence: Geofence): GeofencingRequest {
         return GeofencingRequest.Builder()
-                .setInitialTrigger(0)
+                .setInitialTrigger(INITIAL_TRIGGER_ENTER)
                 .addGeofences(listOf(geofence))
                 .build()
     }
 
-    private fun buildGeofence(reminder: ReminderDataItem): Geofence? {
+    /*
+    private fun buildGeofence(reminder: ReminderDTO): Geofence? {
         val latitude = reminder.latitude
         val longitude = reminder.longitude
         val radius = 150f
@@ -121,19 +116,32 @@ class SaveReminderFragment : BaseFragment() {
         }
 
         return null
-    }
+    }*/
 
 
     @SuppressLint("MissingPermission")
-    private fun addGeofenceForReminder(reminder: ReminderDataItem) {
-        val geofence = buildGeofence(reminder)
+    private fun addGeofenceForReminder(reminderDTO: ReminderDTO) {
+        val geofence = Geofence.Builder()
+                // 1
+                .setRequestId(reminderDTO.id)
+                // 2
+                .setCircularRegion(
+                        reminderDTO.latitude!!,
+                        reminderDTO.longitude!!,
+                        150f
+                )
+                // 3
+                .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_ENTER)
+                // 4
+                .setExpirationDuration(Geofence.NEVER_EXPIRE)
+                .build()
 
         if (geofence != null){
             geofencingClient
                     .addGeofences(buildGeofencingRequest(geofence), geofencePendingIntent)
                     // 3
                     .addOnSuccessListener {
-                        Log.i("geoFence", "line 125: added geofence")
+                        Log.i("geoFence", "added geofence for " + geofence.requestId)
                     }
                     // 4
                     .addOnFailureListener {
@@ -143,6 +151,7 @@ class SaveReminderFragment : BaseFragment() {
         else {
             Log.i("geoFence", "null geofence")
         }
+
     }
 
     override fun onDestroy() {
