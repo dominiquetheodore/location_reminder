@@ -36,15 +36,40 @@ import org.koin.android.ext.android.inject
 import java.util.*
 
 class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
+    private val TAG = "SelectLocationFragment"
 
     //Use Koin to get the view model of the SaveReminder
     override val _viewModel: SaveReminderViewModel by inject()
+
     private lateinit var mMap: GoogleMap
     private lateinit var binding: FragmentSelectLocationBinding
 
     private var reminderPoi:PointOfInterest? = null
 
     private val REQUEST_LOCATION_PERMISSION = 1
+
+    private fun setMapStyle(map: GoogleMap) {
+        try {
+            // Customize the styling of the base map using a JSON object defined
+            // in a raw resource file.
+            val success = map.setMapStyle(
+                MapStyleOptions.loadRawResourceStyle(
+                    getContext()!!,
+                    R.raw.map_style
+                )
+            )
+
+            if (!success) {
+                Log.e(TAG, "Style parsing failed.")
+            }
+            else {
+                Log.e(TAG, "map style set successfully")
+            }
+
+        } catch (e: Resources.NotFoundException) {
+            Log.e(TAG, "Can't find style. Error: ", e)
+        }
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
@@ -74,6 +99,15 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
         return binding.root
     }
 
+    private fun setMapLongClick(map:GoogleMap) {
+        map.setOnMapLongClickListener { latLng ->
+            map.addMarker(
+                MarkerOptions()
+                    .position(latLng)
+            )
+        }
+    }
+
     private fun setPoiClick(map: GoogleMap) {
         map.setOnPoiClickListener { poi ->
             val poiMarker = map.addMarker(
@@ -86,21 +120,23 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
         }
     }
 
+
+
     private fun saveLocation() {
         Log.i("map", "Saving a POI")
     }
 
     override fun onMapReady(googleMap: GoogleMap) {
         mMap = googleMap
-
+        setMapStyle(mMap)
         // Add a marker in Addis Ababa and move the camera
 
         val addis = LatLng(8.9973, 38.7868)
-        val zoomLevel = 20f
+        val zoomLevel = 10f
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(addis, zoomLevel))
 
         enableMyLocation()
-
+        setMapLongClick(mMap)
         setPoiClick(mMap)
     }
 
@@ -161,15 +197,19 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
     override fun onOptionsItemSelected(item: MenuItem) = when (item.itemId) {
         // TODO: Change the map type based on the user's selection.
         R.id.normal_map -> {
+            mMap.mapType = GoogleMap.MAP_TYPE_NORMAL
             true
         }
         R.id.hybrid_map -> {
+            mMap.mapType = GoogleMap.MAP_TYPE_HYBRID
             true
         }
         R.id.satellite_map -> {
+            mMap.mapType = GoogleMap.MAP_TYPE_SATELLITE
             true
         }
         R.id.terrain_map -> {
+            mMap.mapType = GoogleMap.MAP_TYPE_TERRAIN
             true
         }
         else -> super.onOptionsItemSelected(item)

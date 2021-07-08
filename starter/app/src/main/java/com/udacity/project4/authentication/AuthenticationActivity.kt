@@ -4,6 +4,7 @@ import android.annotation.TargetApi
 import android.app.Activity
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Bundle
 import android.util.Log
 import android.view.View
@@ -22,6 +23,9 @@ import com.google.android.material.snackbar.Snackbar
 import com.google.firebase.auth.FirebaseAuth
 import com.udacity.project4.locationreminders.RemindersActivity
 import kotlinx.android.synthetic.main.activity_authentication.*
+import android.provider.Settings
+import com.udacity.project4.BuildConfig
+import java.security.AccessController.getContext
 import java.util.jar.Manifest
 
 /**
@@ -142,7 +146,18 @@ class AuthenticationActivity : AppCompatActivity() {
                         grantResults[BACKGROUND_LOCATION_PERMISSION_INDEX] ==
                         PackageManager.PERMISSION_DENIED))
         {
-            Log.d(TAG, "error setting permissins")
+            Snackbar.make(
+                binding.activityAuthentication,
+                R.string.permission_denied_explanation,
+                Snackbar.LENGTH_INDEFINITE
+            )
+                .setAction(R.string.settings) {
+                    startActivity(Intent().apply {
+                        action = Settings.ACTION_APPLICATION_DETAILS_SETTINGS
+                        data = Uri.fromParts("package", BuildConfig.APPLICATION_ID, null)
+                        flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                    })
+                }.show()
         } else {
             Log.d(TAG, "permissions granted")
         }
