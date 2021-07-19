@@ -81,4 +81,18 @@ class RemindersLocalRepositoryTest {
         assertThat(result.data.location, `is`(reminder.location))
     }
 
+    @Test
+    fun deleteAllReminders_getRemindersById() = runBlocking {
+        // GIVEN - A new task in the persistent repository.
+        val reminder = getReminder()
+        remindersLocalRepository.saveReminder(reminder)
+        remindersLocalRepository.deleteAllReminders()
+
+        val result = remindersLocalRepository.getReminder(reminder.id)
+
+        assertThat(result is Result.Error, `is`(true))
+        result as Result.Error
+        assertThat(result.message, `is`("Reminder not found!"))
+    }
+
 }

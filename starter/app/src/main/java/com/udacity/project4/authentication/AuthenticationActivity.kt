@@ -48,7 +48,7 @@ class AuthenticationActivity : AppCompatActivity() {
     override fun onStart() {
         super.onStart()
         Log.i("hunt", "starting auth activity")
-        checkPermissionsAndStartGeofencing()
+        // checkPermissionsAndStartGeofencing()
     }
 
     private fun checkPermissionsAndStartGeofencing() {

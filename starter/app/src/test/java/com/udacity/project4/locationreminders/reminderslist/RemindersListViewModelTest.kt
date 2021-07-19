@@ -69,4 +69,14 @@ class RemindersListViewModelTest {
         assertThat(remindersListViewModel.showNoData.getOrAwaitValue(), `is`(true))
     }
 
+    @Test
+    fun loadRemindersWhenRemindersAreUnavailable_callErrorToDisplay() = runBlockingTest {
+        // Make the repository return errors.
+        fakeDataSource.setReturnError(true)
+        remindersListViewModel.loadReminders()
+
+        // Then empty and error are true (which triggers an error message to be shown).
+        assertThat(remindersListViewModel.showSnackBar.getOrAwaitValue(), `is`("Reminders not found"))
+    }
+
 }
