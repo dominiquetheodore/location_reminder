@@ -166,7 +166,7 @@ class RemindersActivityTest :
         onView(withId(R.id.addReminderFAB)).perform(click())
         onView(withId(R.id.reminderTitle)).perform(typeText("Buy groceries"))
         onView(withId(R.id.reminderDescription))
-            .perform(typeText("When you are in the supermarket"))
+            .perform(typeText("At the supermarket"))
         closeSoftKeyboard()
         onView(withId(R.id.selectLocation)).perform(click())
 
@@ -182,9 +182,9 @@ class RemindersActivityTest :
 
         onView(withId(R.id.noDataTextView))
             .check(matches(withEffectiveVisibility(Visibility.GONE)))
-        onView(withText("Title"))
+        onView(withText("Buy groceries"))
             .check(matches(isDisplayed()))
-        onView(withText("Description"))
+        onView(withText("At the supermarket"))
             .check(matches(isDisplayed()))
 
         runBlocking {
