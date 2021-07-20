@@ -175,7 +175,10 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
                 latLng.latitude,
                 latLng.longitude
             )
+            Log.i("mMap", "clicked on map")
+
             binding.savelocationBtn.setOnClickListener {
+                Log.i("mMap", "clicked on button")
                 _viewModel.latitude.value = latLng.latitude
                 _viewModel.longitude.value = latLng.longitude
                 _viewModel.reminderSelectedLocationStr.value = getString(R.string.dropped_pin)
@@ -219,6 +222,9 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
         val addis = LatLng(8.9973, 38.7868)
         val zoomLevel = 20f
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(addis, zoomLevel))
+        mMap.addMarker(MarkerOptions()
+            .title("Marker in Addis")
+            .position(addis))
 
         setMapLongClick(mMap)
         setPoiClick(mMap)
@@ -358,6 +364,10 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
             findNavController().navigateUp()
         } else {
             Log.i("poi", "You need to select a POI")
+            Snackbar.make(
+                binding.selectLocation,
+                R.string.err_select_location, Snackbar.LENGTH_INDEFINITE
+            ).show()
         }
     }
 

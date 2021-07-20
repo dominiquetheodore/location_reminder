@@ -2,6 +2,7 @@ package com.udacity.project4
 
 import android.app.Activity
 import android.app.Application
+import android.app.Instrumentation
 import android.os.Bundle
 import androidx.fragment.app.testing.launchFragmentInContainer
 import androidx.test.core.app.ActivityScenario
@@ -16,6 +17,7 @@ import androidx.test.espresso.matcher.ViewMatchers.*
 import androidx.test.filters.LargeTest
 import androidx.test.platform.app.InstrumentationRegistry.getInstrumentation
 import androidx.test.uiautomator.UiDevice
+import androidx.test.uiautomator.UiSelector
 import com.udacity.project4.locationreminders.RemindersActivity
 import com.udacity.project4.locationreminders.data.ReminderDataSource
 import com.udacity.project4.locationreminders.data.dto.ReminderDTO
@@ -24,9 +26,13 @@ import com.udacity.project4.locationreminders.data.local.RemindersLocalRepositor
 import com.udacity.project4.locationreminders.reminderslist.RemindersListViewModel
 import com.udacity.project4.locationreminders.savereminder.SaveReminderFragment
 import com.udacity.project4.locationreminders.savereminder.SaveReminderViewModel
-import com.udacity.project4.util.*
+import com.udacity.project4.util.DataBindingIdlingResource
+import com.udacity.project4.util.EspressoIdlingResource
+import com.udacity.project4.util.monitorActivity
+import com.udacity.project4.util.monitorFragment
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
+import org.hamcrest.CoreMatchers.`is`
 import org.hamcrest.CoreMatchers.not
 import org.junit.After
 import org.junit.Before
@@ -157,7 +163,7 @@ class RemindersActivityTest :
 
 
     @Test
-    fun createReminder_reminderSaved() = runBlocking {
+    fun createReminder_reminderNotSaved() = runBlocking {
         val scenario = ActivityScenario.launch(RemindersActivity::class.java)
         dataBindingIdlingResource.monitorActivity(scenario)
 
@@ -170,22 +176,33 @@ class RemindersActivityTest :
         closeSoftKeyboard()
         onView(withId(R.id.selectLocation)).perform(click())
 
-        // val device = UiDevice.getInstance(getInstrumentation())
-        // device.click(52.50648406893113.toInt(), 13.443535038592412.toInt())
+        val instr: Instrumentation = getInstrumentation()
 
-        onView(withId(R.id.map)).perform(longClick())
-        Thread.sleep(3000)
+        val device = UiDevice.getInstance(instr)
+        val map = device.findObject(
+            UiSelector()
+                .descriptionContains("Marker in Addis")
+        )
+        map.click()
+
         onView(withId(R.id.savelocation_btn)).perform(click())
+        Thread.sleep(3000)
 
-        onView(withText(R.string.reminder_saved)).inRoot(withDecorView(not ((getActivity(scenario)?.window?.getDecorView()))))
-            .check(matches(isDisplayed()))
+        onView(withId(com.google.android.material.R.id.snackbar_text))
+            .check(matches(withText("Please select location")))
+
+        /*
+        // click on the Save Reminder button
+        onView(withId(R.id.saveReminderFAB)).perform(click())
+        onView(withText(R.string.reminder_saved)).inRoot(withDecorView(not(`is`(getActivity(scenario)?.window?.getDecorView())))).check(matches(isDisplayed()))
+        matches(isDisplayed())
 
         onView(withId(R.id.noDataTextView))
             .check(matches(withEffectiveVisibility(Visibility.GONE)))
         onView(withText("Buy groceries"))
             .check(matches(isDisplayed()))
         onView(withText("At the supermarket"))
-            .check(matches(isDisplayed()))
+            .check(matches(isDisplayed()))*/
 
         runBlocking {
             delay(3000)
