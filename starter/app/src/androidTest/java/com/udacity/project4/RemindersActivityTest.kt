@@ -163,7 +163,7 @@ class RemindersActivityTest :
 
 
     @Test
-    fun createReminder_reminderNotSaved() = runBlocking {
+    fun createReminder_reminderSaved() = runBlocking {
         val scenario = ActivityScenario.launch(RemindersActivity::class.java)
         dataBindingIdlingResource.monitorActivity(scenario)
 
@@ -176,22 +176,11 @@ class RemindersActivityTest :
         closeSoftKeyboard()
         onView(withId(R.id.selectLocation)).perform(click())
 
-        val instr: Instrumentation = getInstrumentation()
-
-        val device = UiDevice.getInstance(instr)
-        val map = device.findObject(
-            UiSelector()
-                .descriptionContains("Marker in Addis")
-        )
-        map.click()
+        onView(withId(R.id.map)).perform(longClick());
 
         onView(withId(R.id.savelocation_btn)).perform(click())
         Thread.sleep(3000)
 
-        onView(withId(com.google.android.material.R.id.snackbar_text))
-            .check(matches(withText("Please select location")))
-
-        /*
         // click on the Save Reminder button
         onView(withId(R.id.saveReminderFAB)).perform(click())
         onView(withText(R.string.reminder_saved)).inRoot(withDecorView(not(`is`(getActivity(scenario)?.window?.getDecorView())))).check(matches(isDisplayed()))
@@ -202,7 +191,7 @@ class RemindersActivityTest :
         onView(withText("Buy groceries"))
             .check(matches(isDisplayed()))
         onView(withText("At the supermarket"))
-            .check(matches(isDisplayed()))*/
+            .check(matches(isDisplayed()))
 
         runBlocking {
             delay(3000)
