@@ -161,7 +161,6 @@ class RemindersActivityTest :
         }
     }
 
-
     @Test
     fun createReminder_reminderSaved() = runBlocking {
         val scenario = ActivityScenario.launch(RemindersActivity::class.java)
@@ -179,7 +178,7 @@ class RemindersActivityTest :
         onView(withId(R.id.map)).perform(longClick());
 
         onView(withId(R.id.savelocation_btn)).perform(click())
-        Thread.sleep(3000)
+        Thread.sleep(5000)
 
         // click on the Save Reminder button
         onView(withId(R.id.saveReminderFAB)).perform(click())
@@ -205,8 +204,5 @@ class RemindersActivityTest :
         }
         return activity
     }
-
-
-//    TODO: add End to End testing to the app
 
 }

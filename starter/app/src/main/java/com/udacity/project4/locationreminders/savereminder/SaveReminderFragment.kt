@@ -3,6 +3,7 @@ package com.udacity.project4.locationreminders.savereminder
 import android.annotation.SuppressLint
 import android.annotation.TargetApi
 import android.app.PendingIntent
+import android.content.Context
 import android.content.Intent
 import android.content.IntentSender
 import android.content.pm.PackageManager
@@ -36,14 +37,21 @@ class SaveReminderFragment : BaseFragment() {
     private lateinit var binding: FragmentSaveReminderBinding
     private lateinit var reminderDataItem: ReminderDataItem
     lateinit var geofencingClient: GeofencingClient
+    private lateinit var contxt: Context
 
     private val runningQOrLater = android.os.Build.VERSION.SDK_INT >=
             android.os.Build.VERSION_CODES.Q
 
     private val geofencePendingIntent: PendingIntent by lazy {
-        val intent = Intent(requireActivity(), GeofenceBroadcastReceiver::class.java)
+        val intent = Intent(contxt, GeofenceBroadcastReceiver::class.java)
         intent.action = ACTION_GEOFENCE_EVENT
-        PendingIntent.getBroadcast(requireActivity(), 0, intent, PendingIntent.FLAG_UPDATE_CURRENT)
+        PendingIntent.getBroadcast(contxt, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT)
+    }
+
+    override fun onAttach(context: Context) {
+        super.onAttach(context)
+        Log.i("Context", "Atachoou")
+        contxt = context
     }
 
     override fun onCreateView(
@@ -57,11 +65,12 @@ class SaveReminderFragment : BaseFragment() {
 
         binding.viewModel = _viewModel
 
-        geofencingClient = LocationServices.getGeofencingClient(requireActivity())
+        geofencingClient = LocationServices.getGeofencingClient(contxt)
 
         checkDeviceLocationSettingsAndStartGeofence(true)
 
         binding.saveReminderFAB.setOnClickListener {
+            Log.i("saveReminderFAB", "clicked on the button")
             val title = _viewModel.reminderTitle.value
             val description = _viewModel.reminderDescription.value
             val location = _viewModel.reminderSelectedLocationStr.value
@@ -132,13 +141,13 @@ class SaveReminderFragment : BaseFragment() {
     private fun foregroundAndBackgroundLocationPermissionApproved(): Boolean {
         val foregroundLocationApproved = (
                 PackageManager.PERMISSION_GRANTED ==
-                        ActivityCompat.checkSelfPermission(getContext()!!,
+                        ActivityCompat.checkSelfPermission(contxt,
                             android.Manifest.permission.ACCESS_FINE_LOCATION))
         val backgroundPermissionApproved =
             if (runningQOrLater) {
                 PackageManager.PERMISSION_GRANTED ==
                         ActivityCompat.checkSelfPermission(
-                            getContext()!!, android.Manifest.permission.ACCESS_BACKGROUND_LOCATION
+                            contxt, android.Manifest.permission.ACCESS_BACKGROUND_LOCATION
                         )
             } else {
                 true
