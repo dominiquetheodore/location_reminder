@@ -23,8 +23,8 @@ import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.*
 import com.google.android.material.snackbar.Snackbar
-import com.udacity.project4.BuildConfig
 import com.udacity.project4.R
+import com.udacity.project4.BuildConfig
 import com.udacity.project4.base.BaseFragment
 import com.udacity.project4.databinding.FragmentSelectLocationBinding
 import com.udacity.project4.locationreminders.savereminder.SaveReminderViewModel
@@ -109,6 +109,10 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
         return binding.root
     }
 
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+    }
+
     private fun setMapLongClick(map:GoogleMap) {
         map.setOnMapLongClickListener { latLng ->
             val snippet = String.format(
@@ -143,9 +147,9 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
     private fun setPoiClick(map: GoogleMap) {
         map.setOnPoiClickListener { poi ->
             val poiMarker = map.addMarker(
-                    MarkerOptions()
-                            .position(poi.latLng)
-                            .title(poi.name)
+                MarkerOptions()
+                    .position(poi.latLng)
+                    .title(poi.name)
             )
 
             reminderPoi = poi
@@ -176,11 +180,12 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
     private fun updateUI() {
         try {
             if (isPermissionGranted()) {
+                Log.i("permissionsLocation", "update UI")
                 mMap.uiSettings?.isMyLocationButtonEnabled = true
                 mMap.uiSettings?.isMapToolbarEnabled = false
                 mMap.isMyLocationEnabled = true
             } else {
-                Log.i("permission", "not granted in updateUI")
+                Log.i("permissionsLocation", "not granted in updateUI")
                 mMap.uiSettings?.isMyLocationButtonEnabled = false
                 mMap.uiSettings?.isMapToolbarEnabled = false
                 mMap.isMyLocationEnabled = false
@@ -191,41 +196,28 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
     }
 
     @SuppressLint("MissingPermission")
+
     private fun enableMyLocation() {
+        Log.i("permissionsLocation", "check if required permissions have been granted")
         if (isPermissionGranted()) {
-            Log.i("permissions", "location permissions granted")
-            mMap.setMyLocationEnabled(true)
-            getDeviceLocation()
+            Log.i("permissionsLocation", "Permissions granted. Enable my-location data layer.")
+            mMap.isMyLocationEnabled = true
             updateUI()
+            getDeviceLocation()
         }
         else {
-            Log.i("permissions", "location permissions not granted")
-            /*
-            Snackbar.make(
-                binding.selectLocation,
-                getString(R.string.permission_denied_explanation),
-                Snackbar.LENGTH_INDEFINITE
-            )
-                .setAction(R.string.settings) {
-                    startActivity(Intent().apply {
-                        action = Settings.ACTION_APPLICATION_DETAILS_SETTINGS
-                        data = Uri.fromParts("package", BuildConfig.APPLICATION_ID, null)
-                        flags = Intent.FLAG_ACTIVITY_NEW_TASK
-                    })
-                }.show()*/
-
+            Log.i("permissionsLocation", "Permissions not granted. Request the permission.")
             requestPermissions(
-                arrayOf(
-                    Manifest.permission.ACCESS_FINE_LOCATION
-                ), REQUEST_LOCATION_PERMISSION
+                arrayOf<String>(Manifest.permission.ACCESS_FINE_LOCATION),
+                REQUEST_LOCATION_PERMISSION
             )
-
         }
     }
 
     private fun getDeviceLocation() {
         try {
             if (isPermissionGranted()) {
+                Log.i("permissionsLocation", "Permissions granted. Get device location.")
                 val lastLocation = fusedLocationProviderClient.lastLocation
 
                 lastLocation.addOnCompleteListener(requireActivity()) { task ->
@@ -234,7 +226,7 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
                         // Set the map's camera position to the current location of the device.
                         lastKnownLocation = task.result
                         if (lastKnownLocation != null) {
-                            Log.i("last","last  known location $lastKnownLocation")
+                            Log.i("permissionsLocation","last  known location $lastKnownLocation")
 
                             mMap.moveCamera(
                                 CameraUpdateFactory.newLatLngZoom(
@@ -245,28 +237,22 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
                                 )
                             )
                         } else {
-                            Log.i("last","Exception: %s", task.exception)
+                            Log.i("permissionsLocation","Last known location unknown. Fallback to a default location")
                             val addis = LatLng(8.9973, 38.7868)
-                            mMap.moveCamera(
+                            mMap.animateCamera(
                                 CameraUpdateFactory
                                     .newLatLngZoom(addis, DEFAULT_ZOOM.toFloat())
                             )
                             mMap.addMarker(MarkerOptions()
                                 .title("Marker in Addis")
                                 .position(addis))
-                            _viewModel.showErrorMessage.postValue(getString(R.string.err_select_location))
-                            requestPermissions(
-                                arrayOf(
-                                    Manifest.permission.ACCESS_FINE_LOCATION
-                                ), REQUEST_LOCATION_PERMISSION
-                            )
+                            _viewModel.showErrorMessage.postValue(getString(R.string.location_required_error))
                             mMap.uiSettings?.isMyLocationButtonEnabled = false
                         }
                     }
                 }
                     .addOnFailureListener {
-                        Log.i("failure", "failure")
-                        getDeviceLocation()
+                        Log.i("permissionsLocation", "Could not get device location.")
                     }
             }
         } catch (e: SecurityException) {
@@ -276,31 +262,49 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
     }
 
     override fun onRequestPermissionsResult(
-            requestCode: Int,
-            permissions: Array<String>,
-            grantResults: IntArray) {
+        requestCode: Int,
+        permissions: Array<String>,
+        grantResults: IntArray) {
         // Check if location permissions are granted and if so enable the
         // location data layer.
         if (requestCode == REQUEST_LOCATION_PERMISSION) {
             if (grantResults.size > 0 && (grantResults[0] == PackageManager.PERMISSION_GRANTED)) {
-                Log.i("permisssion", "location permission granted")
+                Log.i("permissionsLocation", "Permissions granted. Enable my-location data layer.")
+                enableMyLocation()
                 updateUI()
                 getDeviceLocation()
-                enableMyLocation()
             }
             else {
-                Log.i("permisssion", "location permission not granted")
+                Snackbar.make(
+                    binding.selectLocation,
+                    R.string.permission_denied_explanation,
+                    Snackbar.LENGTH_LONG
+                )
+                    .setAction(R.string.settings) {
+                        // Build intent that displays the App settings screen.
+                        val intent = Intent()
+                        intent.action = Settings.ACTION_APPLICATION_DETAILS_SETTINGS
+                        val uri = Uri.fromParts(
+                            "package",
+                            BuildConfig.APPLICATION_ID,
+                            null
+                        )
+                        intent.data = uri
+                        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                        startActivity(intent)
+                    }
+                    .show()
             }
         }
         else {
-            Log.i("permisssion", "location permission not granteds")
+            Log.i("permissionsLocation", "Permissions not granted.")
         }
     }
 
     private fun isPermissionGranted() : Boolean {
         return ContextCompat.checkSelfPermission(
-                getContext()!!,
-                Manifest.permission.ACCESS_FINE_LOCATION) === PackageManager.PERMISSION_GRANTED
+            getContext()!!,
+            Manifest.permission.ACCESS_FINE_LOCATION) === PackageManager.PERMISSION_GRANTED
     }
 
     private fun onLocationSelected() {

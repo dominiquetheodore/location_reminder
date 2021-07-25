@@ -52,35 +52,48 @@ class GeofenceTransitionsJobIntentService : JobIntentService(), CoroutineScope {
     }
 
     //TODO: get the request id of the current geofence
-    private fun sendNotification(triggeringGeofences: List<Geofence>) {
-        val requestId = triggeringGeofences[0].requestId
-        Log.i("geoFence", "send notification for " + requestId)
-        //Get the local repository instance
-        val remindersLocalRepository: ReminderDataSource by inject()
-//        Interaction to the repository has to be through a coroutine scope
-        CoroutineScope(coroutineContext).launch(SupervisorJob()) {
-            //get the reminder with the request id
+    private lateinit var requestId : String
 
-            val result = remindersLocalRepository.getReminder(requestId)
-            if (result is Result.Success<ReminderDTO>) {
-                val reminderDTO = result.data
-                //send a notification to the user with the reminder details
-                Log.i("geoFence", "line 68: send notification for " + reminderDTO.title)
-                sendNotification(
+    private fun sendNotification(triggeringGeofences: List<Geofence>) {
+        for (i in triggeringGeofences.indices) {
+            if (triggeringGeofences.isNotEmpty()) {
+                requestId = triggeringGeofences[i].requestId
+
+            } else {
+
+                Log.i("NO_GEOFENCE","No Triggering Geofence Found")
+                return
+            }
+
+            //Get the local repository instance
+            val remindersLocalRepository: ReminderDataSource by inject()
+//        Interaction to the repository has to be through a coroutine scope
+            CoroutineScope(coroutineContext).launch(SupervisorJob()) {
+                //get the reminder with the request id
+
+                val result = remindersLocalRepository.getReminder(requestId)
+                if (result is Result.Success<ReminderDTO>) {
+                    val reminderDTO = result.data
+                    //send a notification to the user with the reminder details
+                    Log.i("geoFence", "line 68: send notification for " + reminderDTO.title)
+                    sendNotification(
                         this@GeofenceTransitionsJobIntentService, ReminderDataItem(
-                        reminderDTO.title,
-                        reminderDTO.description,
-                        reminderDTO.location,
-                        reminderDTO.latitude,
-                        reminderDTO.longitude,
-                        reminderDTO.id
-                )
-                )
+                            reminderDTO.title,
+                            reminderDTO.description,
+                            reminderDTO.location,
+                            reminderDTO.latitude,
+                            reminderDTO.longitude,
+                            reminderDTO.id
+                        )
+                    )
+                }
+                else {
+                    Log.i("geoFence", "requestId $requestId not found")
+                }
             }
-            else {
-                Log.i("geoFence", "requestId not found")
-            }
+
         }
+
     }
 
     private fun handleEvent(event: GeofencingEvent) {

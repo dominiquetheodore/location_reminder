@@ -73,6 +73,7 @@ class AuthenticationActivity : AppCompatActivity() {
                 AuthenticationViewModel.AuthenticationState.AUTHENTICATED -> {
                     Log.i("signInFlow", "user is logged in")
                     startActivity(Intent(this, RemindersActivity::class.java))
+                    finish()
                 }
                 else-> {
                     Log.i("signInFlow", "user is logged out")
